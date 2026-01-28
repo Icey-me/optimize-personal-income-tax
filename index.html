@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>杭州薪资年终奖个税最优规划计算器（全维度）</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        
+        body {
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+        
+        .input-section {
+            max-width: 700px;
+            margin: 0 auto 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        @media (max-width: 768px) {
+            .input-section {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #34495e;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        
+        select {
+            appearance: none;
+            background: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2334495e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center;
+            background-size: 16px;
+        }
+        
+        .full-width {
+            grid-column: 1 / -1;
+        }
+        
+        button {
+            width: 100%;
+            max-width: 700px;
+            padding: 14px;
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 18px;
+            cursor: pointer;
+            margin: 0 auto;
+            display: block;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #1d4ed8;
+        }
+        
+        .result {
+            display: none;
+            margin-top: 20px;
+        }
+        
+        .result h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 20px;
+            text-align: center;
+        }
+        
+        /* 左右两列对比表格样式 */
+        .compare-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 25px;
+        }
+        
+        .compare-table th, .compare-table td {
+            padding: 12px 8px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+            font-size: 14px;
+        }
+        
+        .compare-table th {
+            background-color: #f1f5f9;
+            color: #2c3e50;
+            font-weight: 600;
+            font-size: 15px;
+        }
+        
+        /* 规划前/后列头样式 */
+        .col-before {
+            background-color: #fef2f2;
+            color: #dc2626;
+        }
+        
+        .col-after {
+            background-color: #f0fdf4;
+            color: #16a34a;
+        }
+        
+        /* 关键数据高亮 */
+        .highlight {
+            font-weight: 700;
+            font-size: 15px;
+        }
+        
+        .save-tax {
+            color: #16a34a;
+            font-weight: 700;
+        }
+        
+        .reduce {
+            color: #dc2626;
+            font-weight: 700;
+        }
+        
+        .note {
+            margin-top: 20px;
+            padding: 18px;
+            background-color: #e8f4fd;
+            border-left: 4px solid #3b82f6;
+            color: #2c3e50;
+            font-size: 14px;
+            line-height: 1.6;
+            border-radius: 0 6px 6px 0;
+        }
+        
+        .deduct-note {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>杭州薪资年终奖个税最优规划计算器</h1>
+        
+        <!-- 输入区域：含五险一金薪资 + 杭州社保公积金 + 专项附加扣除 + 年终奖发放月份选择 -->
+        <div class="input-section">
+            <div class="input-group full-width">
+                <label for="monthlySalaryGross">月度薪资（元，含五险一金）：</label>
+                <input type="number" id="monthlySalaryGross" placeholder="例：20000，仅填数字" min="0" step="1" required>
+            </div>
+            
+            <div class="input-group">
+                <label for="yearBonus">年终奖总额（元）：</label>
+                <input type="number" id="yearBonus" placeholder="例：100000，仅填数字" min="0" step="1" required>
+            </div>
+            
+            <div class="input-group">
+                <label for="bonusMonth">年终奖发放月份：</label>
+                <select id="bonusMonth" required>
+                    <option value="1">1月</option>
+                    <option value="2" selected>2月</option>
+                    <option value="3">3月</option>
+                    <option value="4">4月</option>
+                    <option value="5">5月</option>
+                    <option value="6">6月</option>
+                    <option value="7">7月</option>
+                    <option value="8">8月</option>
+                    <option value="9">9月</option>
+                    <option value="10">10月</option>
+                    <option value="11">11月</option>
+                    <option value="12">12月</option>
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <label for="specialDeduction">每月专项附加扣除（元）：</label>
+                <input type="number" id="specialDeduction" placeholder="例：2000（房贷1000+子女1000）" min="0" step="1" value="0">
+                <div class="deduct-note">专项扣除包含：子女教育/继续教育/大病医疗/住房贷款利息/住房租金/赡养老人/婴幼儿照护</div>
+            </div>
+            
+            <div class="input-group">
+                <label for="housingFundRatio">公积金缴纳比例（%）：</label>
+                <input type="number" id="housingFundRatio" placeholder="默认12%" min="5" max="12" step="0.5" value="12">
+                <div class="deduct-note">杭州公积金比例：5%-12%，默认按12%计算</div>
+            </div>
+        </div>
+        
+        <button id="calculateBtn">计算最优个税方案</button>
+        
+        <!-- 结果对比区域 -->
+        <div class="result" id="result">
+            <h2 id="resultTitle">规划前 VS 规划后 全维度税务对比（年终奖2月发放）</h2>
+            <table class="compare-table">
+                <thead>
+                    <tr>
+                        <th rowspan="2" style="min-width: 220px;">对比项目</th>
+                        <th class="col-before">规划前<br>（年终奖全部单独计税）</th>
+                        <th class="col-after">规划后<br>（最优拆分/最低个税）</th>
+                        <th rowspan="2">差异（元）<br>规划后-规划前</th>
+                    </tr>
+                    <tr>
+                        <th>金额/个税（元）</th>
+                        <th>金额/个税（元）</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>月度薪资（含五险一金）</td>
+                        <td id="before-salary-gross" class="highlight">-</td>
+                        <td id="after-salary-gross" class="highlight">-</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>月度五险一金扣除（个人部分）</td>
+                        <td id="before-five-insurance" class="highlight">-</td>
+                        <td id="after-five-insurance" class="highlight">-</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>月度薪资（扣除五险一金后）</td>
+                        <td id="before-salary-net" class="highlight">-</td>
+                        <td id="after-salary-net" class="highlight">-</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>全年综合收入（薪资+年终奖）</td>
+                        <td id="before-total-income" class="highlight">-</td>
+                        <td id="after-total-income" class="highlight">-</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>年终奖单独计税金额</td>
+                        <td id="before-bonus" class="highlight">-</td>
+                        <td id="after-bonus" class="highlight">-</td>
+                        <td id="diff-bonus">-</td>
+                    </tr>
+                    <tr>
+                        <td>并入发放月薪资的奖金金额</td>
+                        <td id="before-merge">-</td>
+                        <td id="after-merge" class="highlight">-</td>
+                        <td id="diff-merge">-</td>
+                    </tr>
+                    <tr>
+                        <td>发放月薪资总额（含并入奖金）</td>
+                        <td id="before-bonus-month-income" class="highlight">-</td>
+                        <td id="after-bonus-month-income" class="highlight">-</td>
+                        <td id="diff-bonus-month-income">-</td>
+                    </tr>
+                    <tr>
+                        <td>发放月薪资个税（含并入奖金）</td>
+                        <td id="before-bonus-month-tax" class="highlight">-</td>
+                        <td id="after-bonus-month-tax" class="highlight">-</td>
+                        <td id="diff-bonus-month-tax">-</td>
+                    </tr>
+                    <tr>
+                        <td>发放月薪资税后收入</td>
+                        <td id="before-bonus-month-after-tax" class="highlight">-</td>
+                        <td id="after-bonus-month-after-tax" class="highlight">-</td>
+                        <td id="diff-bonus-month-after-tax" class="save-tax">-</td>
+                    </tr>
+                    <tr>
+                        <td>年终奖税后金额</td>
+                        <td id="before-bonus-after-tax" class="highlight">-</td>
+                        <td id="after-bonus-after-tax" class="highlight">-</td>
+                        <td id="diff-bonus-after-tax">-</td>
+                    </tr>
+                    <tr>
+                        <td><strong>发放月到手总收入（薪资税后+年终奖税后）</strong></td>
+                        <td id="before-feb-total-after-tax" class="highlight">-</td>
+                        <td id="after-feb-total-after-tax" class="highlight">-</td>
+                        <td id="diff-feb-total-after-tax" class="save-tax">-</td>
+                    </tr>
+                    <tr>
+                        <td>全年薪资综合所得个税（含并入奖金）</td>
+                        <td id="before-salary-tax" class="highlight">-</td>
+                        <td id="after-salary-tax" class="highlight">-</td>
+                        <td id="diff-salary-tax">-</td>
+                    </tr>
+                    <tr>
+                        <td>年终奖单独计税个税</td>
+                        <td id="before-bonus-tax" class="highlight">-</td>
+                        <td id="after-bonus-tax" class="highlight">-</td>
+                        <td id="diff-bonus-tax">-</td>
+                    </tr>
+                    <tr style="background-color: #f8fafc;">
+                        <td><strong>全年个税总额（薪资+年终奖）</strong></td>
+                        <td id="before-total-tax" class="highlight">-</td>
+                        <td id="after-total-tax" class="highlight">-</td>
+                        <td id="save-tax" class="save-tax">-</td>
+                    </tr>
+                    <tr style="background-color: #f8fafc;">
+                        <td><strong>全年税后总收入（收入-总个税）</strong></td>
+                        <td id="before-after-tax-income" class="highlight">-</td>
+                        <td id="after-after-tax-income" class="highlight">-</td>
+                        <td id="diff-after-tax-income" class="save-tax">-</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="note">
+                <strong>📌 杭州本地计算规则说明</strong><br>
+                1. 五险一金扣除（2026年杭州标准）：<br>
+                &nbsp;&nbsp;• 养老保险：8% | 医疗保险：2%+3元 | 失业保险：0.5% | 公积金：按输入比例（5%-12%）<br>
+                &nbsp;&nbsp;• 社保基数上下限：下限4491元，上限24311元；公积金基数上下限：下限2280元，上限41200元<br>
+                2. 个税起征点：每月5000元，专项附加扣除按月累加，采用累计预扣预缴法计算月度个税；<br>
+                3. 年终奖发放月份：按选择月份计算，并入奖金仅计入该月薪资计税，年终奖单独计税部分税后发放；<br>
+                4. 发放月到手总收入=发放月薪资税后收入+年终奖税后金额（单独计税部分）；<br>
+                5. 最优方案：遍历个税临界点（3.6万/14.4万/30万等），找到拆分后个税总额最低的合法组合；<br>
+                6. 本结果为税务筹划参考，实际个税/社保缴纳以杭州税务/社保部门核算、企业申报为准。
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 2026年杭州社保基数上下限（元）
+        const HANGZHOU_SOCIAL_BASE = {
+            min: 4491,    // 社保基数下限
+            max: 24311,   // 社保基数上限
+            fundMin: 2280,// 公积金基数下限
+            fundMax: 41200// 公积金基数上限
+        };
+
+        // 杭州社保个人缴纳比例
+        const SOCIAL_RATIOS = {
+            pension: 0.08,    // 养老保险8%
+            medical: 0.02,    // 医疗保险2%
+            medicalFixed: 3,  // 医疗固定扣除3元
+            unemployment: 0.005 // 失业保险0.5%
+        };
+
+        // 综合所得税率表（月度累计预扣，年度临界点）
+        const monthlyTaxRates = [
+            { threshold: 0, rate: 0.03, quickDeduction: 0 },
+            { threshold: 36000, rate: 0.1, quickDeduction: 2520 },
+            { threshold: 144000, rate: 0.2, quickDeduction: 16920 },
+            { threshold: 300000, rate: 0.25, quickDeduction: 31920 },
+            { threshold: 420000, rate: 0.3, quickDeduction: 52920 },
+            { threshold: 660000, rate: 0.35, quickDeduction: 85920 },
+            { threshold: 960000, rate: 0.45, quickDeduction: 181920 }
+        ];
+
+        // 年终奖单独计税税率表（月度）
+        const bonusTaxRates = [
+            { threshold: 0, rate: 0.03, quickDeduction: 0 },
+            { threshold: 3000, rate: 0.1, quickDeduction: 210 },
+            { threshold: 12000, rate: 0.2, quickDeduction: 1410 },
+            { threshold: 25000, rate: 0.25, quickDeduction: 2660 },
+            { threshold: 35000, rate: 0.3, quickDeduction: 4410 },
+            { threshold: 55000, rate: 0.35, quickDeduction: 7160 },
+            { threshold: 80000, rate: 0.45, quickDeduction: 15160 }
+        ];
+
+        // 格式化数字：保留2位小数+千分位，负数补0
+        const formatNum = (num) => {
+            const n = Math.max(0, parseFloat(num) || 0);
+            return n.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        };
+
+        // 计算差异值并添加样式（正数绿色，负数红色）
+        const formatDiff = (num) => {
+            const n = parseFloat(num) || 0;
+            if (n > 0) return `<span class="save-tax">+${formatNum(n)}</span>`;
+            if (n < 0) return `<span class="reduce">${formatNum(n)}</span>`;
+            return formatNum(n);
+        };
+
+        // 计算杭州五险一金个人扣除额（核心：按基数上下限+比例）
+        function calculateFiveInsuranceFund(salaryGross, fundRatio) {
+            // 1. 计算社保基数（薪资在上下限之间取实际值，否则取上下限）
+            const socialBase = Math.max(HANGZHOU_SOCIAL_BASE.min, Math.min(HANGZHOU_SOCIAL_BASE.max, salaryGross));
+            // 2. 计算公积金基数
+            const fundBase = Math.max(HANGZHOU_SOCIAL_BASE.fundMin, Math.min(HANGZHOU_SOCIAL_BASE.fundMax, salaryGross));
+            // 3. 计算各险种扣除额
+            const pension = socialBase * SOCIAL_RATIOS.pension;
+            const medical = socialBase * SOCIAL_RATIOS.medical + SOCIAL_RATIOS.medicalFixed;
+            const unemployment = socialBase * SOCIAL_RATIOS.unemployment;
+            const housingFund = fundBase * (fundRatio / 100);
+            // 4. 合计扣除额
+            const totalDeduct = pension + medical + unemployment + housingFund;
+            // 5. 扣除后的薪资
+            const salaryNet = salaryGross - totalDeduct;
+
+            return {
+                pension,
+                medical,
+                unemployment,
+                housingFund,
+                totalDeduct,
+                salaryNet
+            };
+        }
+
+        // 计算累计预扣个税+返回明细（含杭州社保+专项扣除+自定义发放月份）
+        function calculateSalaryTaxDetail(salaryNet, specialDeduct, mergeToSalary, bonusMonth = 2) {
+            let totalTax = 0; // 全年薪资个税总额
+            let cumulativeIncome = 0; // 累计收入（扣除五险一金后）
+            const baseDed = 5000; // 每月起征点
+            let bonusMonthTax = 0; // 发放月薪资个税
+            let bonusMonthTotalIncome = salaryNet; // 发放月薪资总额（含并入奖金）
+
+            for (let month = 1; month <= 12; month++) {
+                // 当月收入：发放月叠加并入奖金，其他月份为扣除五险一金后的薪资
+                if (month === bonusMonth) {
+                    bonusMonthTotalIncome = salaryNet + mergeToSalary;
+                }
+                const curIncome = month === bonusMonth ? bonusMonthTotalIncome : salaryNet;
+                cumulativeIncome += curIncome;
+                
+                // 累计扣除：起征点+专项附加扣除（每月累加）
+                const cumulativeDeduct = (baseDed + specialDeduct) * month;
+                // 累计应纳税所得额
+                const cumulativeTaxable = Math.max(0, cumulativeIncome - cumulativeDeduct);
+                
+                // 计算累计应缴个税
+                let cumulativeTax = 0;
+                if (cumulativeTaxable > 0) {
+                    for (let i = monthlyTaxRates.length - 1; i >= 0; i--) {
+                        const b = monthlyTaxRates[i];
+                        if (cumulativeTaxable > b.threshold) {
+                            cumulativeTax = cumulativeTaxable * b.rate - b.quickDeduction;
+                            break;
+                        }
+                    }
+                }
+                
+                // 当月个税 = 累计个税 - 累计已缴个税
+                const monthTax = cumulativeTax - totalTax;
+                // 记录发放月当月个税
+                if (month === bonusMonth) bonusMonthTax = monthTax;
+                totalTax += monthTax;
+            }
+
+            // 计算发放月薪资税后收入 = 发放月薪资总额 - 发放月薪资个税
+            const bonusMonthAfterTax = bonusMonthTotalIncome - bonusMonthTax;
+
+            return {
+                annualSalaryTax: totalTax, // 全年薪资个税
+                bonusMonthTax: bonusMonthTax, // 发放月薪资个税
+                bonusMonthTotalIncome: bonusMonthTotalIncome, // 发放月薪资总额
+                bonusMonthAfterTax: bonusMonthAfterTax // 发放月薪资税后收入
+            };
+        }
+
+        // 计算年终奖单独计税个税+税后金额
+        function calculateBonusTax(bonus) {
+            if (bonus <= 0) return { tax: 0, afterTax: 0 };
+            const monthlyBonus = bonus / 12;
+            let tax = 0;
+            for (let i = bonusTaxRates.length - 1; i >= 0; i--) {
+                const b = bonusTaxRates[i];
+                if (monthlyBonus > b.threshold) {
+                    tax = bonus * b.rate - b.quickDeduction;
+                    break;
+                }
+            }
+            return {
+                tax: tax,
+                afterTax: bonus - tax // 年终奖税后金额
+            };
+        }
+
+        // 寻找最优拆分方案
+        function findOptimalSplit(salaryGross, yearBonus, specialDeduct, fundRatio, bonusMonth) {
+            // 1. 计算杭州五险一金扣除+扣除后薪资
+            const fiveInsResult = calculateFiveInsuranceFund(salaryGross, fundRatio);
+            const salaryNet = fiveInsResult.salaryNet;
+            const annualBaseSalary = salaryNet * 12;
+            const totalIncome = annualBaseSalary + yearBonus; // 全年综合收入
+            
+            let minTotalTax = Infinity;
+            // 初始化最优解参数
+            let opt = {
+                mergeAmount: 0,
+                bonusAmount: yearBonus,
+                annualSalaryTax: 0,
+                bonusTax: 0,
+                bonusAfterTax: 0,
+                bonusMonthTax: 0,
+                bonusMonthTotalIncome: salaryNet,
+                bonusMonthAfterTax: 0,
+                febTotalAfterTax: 0 // 发放月到手总收入
+            };
+
+            // 个税临界点（年终奖单独计税核心节点）
+            const criticalPoints = [0, 36000, 144000, 300000, 420000, 660000, 960000, yearBonus];
+            // 构建检查点
+            const checkPoints = new Set();
+            criticalPoints.forEach(p => {
+                if (p <= yearBonus) checkPoints.add(p);
+                if (p - 1000 > 0 && p - 1000 <= yearBonus) checkPoints.add(p - 1000);
+                if (p + 1000 <= yearBonus) checkPoints.add(p + 1000);
+            });
+
+            // 遍历所有检查点，计算最优方案
+            checkPoints.forEach(bonusAmount => {
+                const mergeAmount = yearBonus - bonusAmount;
+                // 计算薪资个税明细
+                const salaryTaxDetail = calculateSalaryTaxDetail(salaryNet, specialDeduct, mergeAmount, bonusMonth);
+                // 计算年终奖个税+税后
+                const bonusTaxDetail = calculateBonusTax(bonusAmount);
+                // 个税总额
+                const totalTax = salaryTaxDetail.annualSalaryTax + bonusTaxDetail.tax;
+                // 发放月到手总收入 = 发放月薪资税后 + 年终奖税后
+                const febTotalAfterTax = salaryTaxDetail.bonusMonthAfterTax + bonusTaxDetail.afterTax;
+
+                // 更新最优解
+                if (totalTax < minTotalTax) {
+                    minTotalTax = totalTax;
+                    opt = {
+                        mergeAmount,
+                        bonusAmount,
+                        annualSalaryTax: salaryTaxDetail.annualSalaryTax,
+                        bonusTax: bonusTaxDetail.tax,
+                        bonusAfterTax: bonusTaxDetail.afterTax,
+                        bonusMonthTax: salaryTaxDetail.bonusMonthTax,
+                        bonusMonthTotalIncome: salaryTaxDetail.bonusMonthTotalIncome,
+                        bonusMonthAfterTax: salaryTaxDetail.bonusMonthAfterTax,
+                        febTotalAfterTax: febTotalAfterTax
+                    };
+                }
+            });
+
+            // 规划前数据（年终奖全部单独计税）
+            const beforeSalaryTaxDetail = calculateSalaryTaxDetail(salaryNet, specialDeduct, 0, bonusMonth);
+            const beforeBonusTaxDetail = calculateBonusTax(yearBonus);
+            const beforeTotalTax = beforeSalaryTaxDetail.annualSalaryTax + beforeBonusTaxDetail.tax;
+            const beforeFebTotalAfterTax = beforeSalaryTaxDetail.bonusMonthAfterTax + beforeBonusTaxDetail.afterTax;
+            const beforeAfterTax = totalIncome - beforeTotalTax; // 规划前全年税后收入
+            const afterAfterTax = totalIncome - minTotalTax; // 规划后全年税后收入
+            const saveTax = beforeTotalTax - minTotalTax; // 节税金额
+
+            return {
+                salaryGross: salaryGross,
+                fiveInsResult: fiveInsResult,
+                totalIncome: totalIncome,
+                bonusMonth: bonusMonth,
+                // 规划前数据
+                before: {
+                    bonusAmount: yearBonus,
+                    mergeAmount: 0,
+                    bonusMonthTotalIncome: beforeSalaryTaxDetail.bonusMonthTotalIncome,
+                    bonusMonthTax: beforeSalaryTaxDetail.bonusMonthTax,
+                    bonusMonthAfterTax: beforeSalaryTaxDetail.bonusMonthAfterTax,
+                    bonusTax: beforeBonusTaxDetail.tax,
+                    bonusAfterTax: beforeBonusTaxDetail.afterTax,
+                    febTotalAfterTax: beforeFebTotalAfterTax,
+                    annualSalaryTax: beforeSalaryTaxDetail.annualSalaryTax,
+                    totalTax: beforeTotalTax,
+                    afterTaxIncome: beforeAfterTax
+                },
+                // 规划后数据
+                after: opt,
+                // 节税/差异
+                saveTax,
+                afterTaxIncomeDiff: afterAfterTax - beforeAfterTax
+            };
+        }
+
+        // 页面交互逻辑
+        document.getElementById('calculateBtn').addEventListener('click', function() {
+            // 获取输入值
+            const salaryGross = parseFloat(document.getElementById('monthlySalaryGross').value) || 0;
+            const yearBonus = parseFloat(document.getElementById('yearBonus').value) || 0;
+            const specialDeduct = parseFloat(document.getElementById('specialDeduction').value) || 0;
+            const fundRatio = parseFloat(document.getElementById('housingFundRatio').value) || 12;
+            const bonusMonth = parseInt(document.getElementById('bonusMonth').value) || 2;
+
+            // 输入校验
+            if (salaryGross < 0 || yearBonus < 0 || specialDeduct < 0) {
+                alert('请输入有效的非负数金额！');
+                return;
+            }
+            if (fundRatio < 5 || fundRatio > 12) {
+                alert('公积金比例需在5%-12%之间！');
+                return;
+            }
+            if (salaryGross === 0 && yearBonus === 0) {
+                alert('请输入薪资或年终奖金额！');
+                return;
+            }
+
+            // 计算最优方案
+            const res = findOptimalSplit(salaryGross, yearBonus, specialDeduct, fundRatio, bonusMonth);
+
+            // 更新结果标题，显示选择的发放月份
+            document.getElementById('resultTitle').textContent = `规划前 VS 规划后 全维度税务对比（年终奖${bonusMonth}月发放）`;
+
+            // 填充规划前基础数据
+            document.getElementById('before-salary-gross').textContent = formatNum(res.salaryGross);
+            document.getElementById('before-five-insurance').textContent = formatNum(res.fiveInsResult.totalDeduct);
+            document.getElementById('before-salary-net').textContent = formatNum(res.fiveInsResult.salaryNet);
+            document.getElementById('before-total-income').textContent = formatNum(res.totalIncome);
+            document.getElementById('before-bonus').textContent = formatNum(res.before.bonusAmount);
+            document.getElementById('before-merge').textContent = formatNum(res.before.mergeAmount);
+            document.getElementById('before-bonus-month-income').textContent = formatNum(res.before.bonusMonthTotalIncome);
+            document.getElementById('before-bonus-month-tax').textContent = formatNum(res.before.bonusMonthTax);
+            document.getElementById('before-bonus-month-after-tax').textContent = formatNum(res.before.bonusMonthAfterTax);
+            document.getElementById('before-bonus-tax').textContent = formatNum(res.before.bonusTax);
+            document.getElementById('before-bonus-after-tax').textContent = formatNum(res.before.bonusAfterTax);
+            document.getElementById('before-feb-total-after-tax').textContent = formatNum(res.before.febTotalAfterTax);
+            document.getElementById('before-salary-tax').textContent = formatNum(res.before.annualSalaryTax);
+            document.getElementById('before-total-tax').textContent = formatNum(res.before.totalTax);
+            document.getElementById('before-after-tax-income').textContent = formatNum(res.before.afterTaxIncome);
+
+            // 填充规划后基础数据
+            document.getElementById('after-salary-gross').textContent = formatNum(res.salaryGross);
+            document.getElementById('after-five-insurance').textContent = formatNum(res.fiveInsResult.totalDeduct);
+            document.getElementById('after-salary-net').textContent = formatNum(res.fiveInsResult.salaryNet);
+            document.getElementById('after-total-income').textContent = formatNum(res.totalIncome);
+            document.getElementById('after-bonus').textContent = formatNum(res.after.bonusAmount);
+            document.getElementById('after-merge').textContent = formatNum(res.after.mergeAmount);
+            document.getElementById('after-bonus-month-income').textContent = formatNum(res.after.bonusMonthTotalIncome);
+            document.getElementById('after-bonus-month-tax').textContent = formatNum(res.after.bonusMonthTax);
+            document.getElementById('after-bonus-month-after-tax').textContent = formatNum(res.after.bonusMonthAfterTax);
+            document.getElementById('after-bonus-tax').textContent = formatNum(res.after.bonusTax);
+            document.getElementById('after-bonus-after-tax').textContent = formatNum(res.after.bonusAfterTax);
+            document.getElementById('after-feb-total-after-tax').textContent = formatNum(res.after.febTotalAfterTax);
+            document.getElementById('after-salary-tax').textContent = formatNum(res.after.annualSalaryTax);
+            document.getElementById('after-total-tax').textContent = formatNum(res.before.totalTax - res.saveTax);
+            document.getElementById('after-after-tax-income').textContent = formatNum(res.before.afterTaxIncome + res.saveTax);
+
+            // 填充差异数据（带样式）
+            document.getElementById('diff-bonus').innerHTML = formatDiff(res.after.bonusAmount - res.before.bonusAmount);
+            document.getElementById('diff-merge').innerHTML = formatDiff(res.after.mergeAmount - res.before.mergeAmount);
+            document.getElementById('diff-bonus-month-income').innerHTML = formatDiff(res.after.bonusMonthTotalIncome - res.before.bonusMonthTotalIncome);
+            document.getElementById('diff-bonus-month-tax').innerHTML = formatDiff(res.after.bonusMonthTax - res.before.bonusMonthTax);
+            document.getElementById('diff-bonus-month-after-tax').innerHTML = formatDiff(res.after.bonusMonthAfterTax - res.before.bonusMonthAfterTax);
+            document.getElementById('diff-bonus-tax').innerHTML = formatDiff(res.after.bonusTax - res.before.bonusTax);
+            document.getElementById('diff-bonus-after-tax').innerHTML = formatDiff(res.after.bonusAfterTax - res.before.bonusAfterTax);
+            document.getElementById('diff-feb-total-after-tax').innerHTML = formatDiff(res.after.febTotalAfterTax - res.before.febTotalAfterTax);
+            document.getElementById('diff-salary-tax').innerHTML = formatDiff(res.after.annualSalaryTax - res.before.annualSalaryTax);
+            document.getElementById('save-tax').innerHTML = formatDiff(-res.saveTax);
+            document.getElementById('diff-after-tax-income').innerHTML = formatDiff(res.afterTaxIncomeDiff);
+
+            // 显示结果并平滑滚动
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
+        });
+
+        // 输入框屏蔽非数字字符
+        const numberInputs = document.querySelectorAll('input[type="number"]');
+        numberInputs.forEach(input => {
+            input.addEventListener('keypress', function(e) {
+                if (['e', 'E', '+', '-'].includes(e.key)) e.preventDefault();
+            });
+        });
+    </script>
+</body>
+</html>
