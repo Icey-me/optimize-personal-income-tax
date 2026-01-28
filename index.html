@@ -386,13 +386,13 @@
             { threshold: 80000, rate: 0.45, quickDeduction: 15160 }
         ];
 
-        // 格式化数字：保留2位小数+千分位，负数补0
+        // 格式化数字：保留2位小数+千分位，保留正负（核心修复：移除Math.max(0)）
         const formatNum = (num) => {
-            const n = Math.max(0, parseFloat(num) || 0);
+            const n = parseFloat(num) || 0;
             return n.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         };
 
-        // 计算差异值并添加样式（正数绿色，负数红色）
+        // 计算差异值并添加样式：正数绿色+号，负数红色实际值，0显示0
         const formatDiff = (num) => {
             const n = parseFloat(num) || 0;
             if (n > 0) return `<span class="save-tax">+${formatNum(n)}</span>`;
@@ -621,7 +621,7 @@
             // 更新结果标题，显示选择的发放月份
             document.getElementById('resultTitle').textContent = `规划前 VS 规划后 全维度税务对比（年终奖${bonusMonth}月发放）`;
 
-            // 填充规划前基础数据
+            // 填充规划前基础数据（均为非负，不影响）
             document.getElementById('before-salary-gross').textContent = formatNum(res.salaryGross);
             document.getElementById('before-five-insurance').textContent = formatNum(res.fiveInsResult.totalDeduct);
             document.getElementById('before-salary-net').textContent = formatNum(res.fiveInsResult.salaryNet);
@@ -638,7 +638,7 @@
             document.getElementById('before-total-tax').textContent = formatNum(res.before.totalTax);
             document.getElementById('before-after-tax-income').textContent = formatNum(res.before.afterTaxIncome);
 
-            // 填充规划后基础数据
+            // 填充规划后基础数据（均为非负，不影响）
             document.getElementById('after-salary-gross').textContent = formatNum(res.salaryGross);
             document.getElementById('after-five-insurance').textContent = formatNum(res.fiveInsResult.totalDeduct);
             document.getElementById('after-salary-net').textContent = formatNum(res.fiveInsResult.salaryNet);
@@ -655,7 +655,7 @@
             document.getElementById('after-total-tax').textContent = formatNum(res.before.totalTax - res.saveTax);
             document.getElementById('after-after-tax-income').textContent = formatNum(res.before.afterTaxIncome + res.saveTax);
 
-            // 填充差异数据（带样式）
+            // 填充差异数据（核心：现在负数会显示实际值）
             document.getElementById('diff-bonus').innerHTML = formatDiff(res.after.bonusAmount - res.before.bonusAmount);
             document.getElementById('diff-merge').innerHTML = formatDiff(res.after.mergeAmount - res.before.mergeAmount);
             document.getElementById('diff-bonus-month-income').innerHTML = formatDiff(res.after.bonusMonthTotalIncome - res.before.bonusMonthTotalIncome);
